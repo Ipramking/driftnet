@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import DetailDialog from "@/components/DetailDialog";
 import type { Workspace } from "@/lib/types";
 import { asString, asStringArray, formatDeadline } from "@/lib/format";
 
@@ -13,6 +14,7 @@ export default function WorkspaceCard({ workspace }: { workspace: Workspace }) {
   const resources = asStringArray(f.resources);
   const itemCount = workspace.items?.length ?? workspace.itemIds.length;
   const [done, setDone] = useState<Set<number>>(new Set());
+  const [detail, setDetail] = useState(false);
 
   function toggle(i: number) {
     setDone((prev) => {
@@ -36,7 +38,15 @@ export default function WorkspaceCard({ workspace }: { workspace: Workspace }) {
           >
             {workspace.templateType}
           </span>
-          <h3 className="font-serif text-[19px] leading-tight font-medium">{workspace.name}</h3>
+          <h3 className="font-serif text-[19px] leading-tight font-medium">
+            <button
+              type="button"
+              onClick={() => setDetail(true)}
+              className="cursor-pointer text-left underline-offset-4 hover:underline"
+            >
+              {workspace.name}
+            </button>
+          </h3>
         </div>
         <span
           className={`rounded-full px-2.5 py-1 font-mono text-[11px] whitespace-nowrap ${
@@ -88,7 +98,7 @@ export default function WorkspaceCard({ workspace }: { workspace: Workspace }) {
       )}
 
       {(stack.length > 0 || resources.length > 0 || itemCount > 0) && (
-        <footer className="flex flex-wrap gap-1.5 border-t border-line pt-3">
+        <footer className="flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
           {stack.map((s) => (
             <span key={s} className="rounded-full bg-paper px-2.5 py-1 font-mono text-[10.5px] text-ink-soft">
               {s}
@@ -104,7 +114,25 @@ export default function WorkspaceCard({ workspace }: { workspace: Workspace }) {
               {itemCount} captured
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => setDetail(true)}
+            className="ml-auto min-h-9 cursor-pointer px-2 font-mono text-[11px] text-accent hover:underline"
+          >
+            View details
+          </button>
         </footer>
+      )}
+      {detail && (
+        <DetailDialog
+          detail={{
+            kicker: workspace.templateType,
+            title: workspace.name,
+            fields: workspace.fields,
+            captures: (workspace.items ?? []).map((i) => ({ text: i.rawInput, at: i.createdAt })),
+          }}
+          onClose={() => setDetail(false)}
+        />
       )}
     </article>
   );
