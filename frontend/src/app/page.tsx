@@ -33,8 +33,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+    Promise.all([listWorkspaces(), listItems()])
+      .then(([ws, its]) => {
+        if (cancelled) return;
+        setWorkspaces([...ws].sort(byDeadline));
+        setItems(its.filter((i) => !i.workspaceId));
+        setOffline(false);
+      })
+      .catch(() => {
+        if (!cancelled) setOffline(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleCapture(text: string): Promise<boolean> {
     setBusy(true);

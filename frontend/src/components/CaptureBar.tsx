@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 interface RecognitionEvent {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -36,14 +36,15 @@ interface Props {
 export default function CaptureBar({ busy, onSubmit }: Props) {
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
+  const voiceSupported = useSyncExternalStore(
+    () => () => {},
+    () => getRecognitionCtor() !== null,
+    () => false,
+  );
   const recRef = useRef<Recognition | null>(null);
   const baseRef = useRef("");
 
-  useEffect(() => {
-    setVoiceSupported(getRecognitionCtor() !== null);
-    return () => recRef.current?.stop();
-  }, []);
+  useEffect(() => () => recRef.current?.stop(), []);
 
   function toggleVoice() {
     if (listening) {
