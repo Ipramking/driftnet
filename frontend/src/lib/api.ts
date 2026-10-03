@@ -11,6 +11,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function transcribeAvailable(): Promise<boolean> {
+  try {
+    const data = await request<{ transcribe: boolean }>("/api/health");
+    return data.transcribe;
+  } catch {
+    return false;
+  }
+}
+
+export async function transcribe(audio: Blob): Promise<string> {
+  const res = await fetch(`${BASE}/api/transcribe`, {
+    method: "POST",
+    headers: { "Content-Type": audio.type || "audio/webm" },
+    body: audio,
+  });
+  if (!res.ok) throw new Error(`Transcription responded ${res.status}`);
+  const data = (await res.json()) as { transcript: string };
+  return data.transcript;
+}
+
 export function capture(text: string): Promise<CaptureResult> {
   return request("/api/capture", {
     method: "POST",

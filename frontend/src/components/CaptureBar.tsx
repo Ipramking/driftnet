@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { transcribe, transcribeAvailable } from "@/lib/api";
 
 interface RecognitionEvent {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -43,10 +44,57 @@ export default function CaptureBar({ busy, onSubmit }: Props) {
   );
   const recRef = useRef<Recognition | null>(null);
   const baseRef = useRef("");
+  const [scribe, setScribe] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
 
-  useEffect(() => () => recRef.current?.stop(), []);
+  useEffect(() => {
+    let alive = true;
+    transcribeAvailable().then((ok) => alive && setScribe(ok));
+    return () => {
+      alive = false;
+      recRef.current?.stop();
+      recorderRef.current?.stop();
+    };
+  }, []);
+
+  async function toggleScribe() {
+    if (listening) {
+      recorderRef.current?.stop();
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      return;
+    }
+    const chunks: Blob[] = [];
+    const recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      setListening(false);
+      setTranscribing(true);
+      try {
+        const heard = await transcribe(new Blob(chunks, { type: recorder.mimeType }));
+        if (heard) setText((prev) => (prev ? `${prev.trimEnd()} ${heard}` : heard));
+      } catch {
+        // leave the text box untouched; the user can type instead
+      } finally {
+        setTranscribing(false);
+      }
+    };
+    recorderRef.current = recorder;
+    recorder.start();
+    setListening(true);
+  }
 
   function toggleVoice() {
+    if (scribe) {
+      void toggleScribe();
+      return;
+    }
     if (listening) {
       recRef.current?.stop();
       return;
@@ -105,9 +153,15 @@ export default function CaptureBar({ busy, onSubmit }: Props) {
       <button
         type="button"
         onClick={toggleVoice}
-        disabled={!voiceSupported}
+        disabled={(!voiceSupported && !scribe) || transcribing}
         aria-label={listening ? "Stop voice capture" : "Capture by voice"}
-        title={voiceSupported ? undefined : "Voice capture needs a browser with speech recognition, such as Chrome"}
+        title={
+          transcribing
+            ? "Transcribing..."
+            : voiceSupported || scribe
+              ? undefined
+              : "Voice capture needs a browser with speech recognition, such as Chrome"
+        }
         className={`flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
           listening ? "listening border-accent bg-accent" : "border-line bg-card hover:border-accent"
         }`}
@@ -124,7 +178,7 @@ export default function CaptureBar({ busy, onSubmit }: Props) {
       </button>
       <button
         type="submit"
-        disabled={busy || !text.trim()}
+        disabled={busy || !text.trim() || transcribing || (scribe && listening)}
         aria-label="Capture"
         className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
       >

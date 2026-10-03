@@ -27,9 +27,9 @@ The two folders are independent services during development (agent runs on its o
 Base URL during dev: `http://localhost:4000`
 
 ### `POST /api/transcribe`
-Request: `multipart/form-data` with an `audio` file field (webm/mp3/wav).
+Request: raw audio bytes as the body, with the recording's Content-Type header (webm/mp3/wav).
 Response: `{ "transcript": string }`
-Implementation: ElevenLabs Scribe speech-to-text API — **deferred until API credits are available**. Stub for now; the frontend uses the browser's own speech recognition in the meantime and doesn't call this endpoint yet.
+Implementation: ElevenLabs Scribe speech-to-text. Returns 501 when no ElevenLabs key is set; `GET /api/health` reports `transcribe: true/false` so the frontend falls back to browser speech recognition.
 
 ### `POST /api/capture`
 Request: `{ "text": string, "source"?: string }`
