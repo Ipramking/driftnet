@@ -11,7 +11,7 @@ Built for Hacktoberfest's "Build for a Friend" weekend challenge, around a very 
 - **Capture → structure pipeline**: an agent built on [Mastra](https://mastra.ai), an open-source TypeScript agent framework, classifies incoming text against a set of templates and extracts the fields that matter.
 - **Reasoning model**: [Gemma](https://ai.google.dev/gemma), an open-weight model, does the classification and extraction — no closed model required for the core loop to work.
 - **Voice capture**: ElevenLabs Scribe turns a spoken capture into text before it hits the same pipeline as anything typed.
-- Local-first storage (SQLite) — nothing about the core loop depends on a remote database.
+- **Accounts and sync**: email and password sign-in, with every capture stored per user in Postgres, so the same workspaces show up on a laptop and a phone. With no `DATABASE_URL` set, the agent falls back to an in-process local Postgres (PGlite) for development.
 
 See `SPEC.md` for the full architecture and API contract, and `frontend/` / `agent/` for the two halves of the build.
 

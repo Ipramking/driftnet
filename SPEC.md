@@ -58,7 +58,7 @@ Implementation: a Mastra agent/workflow that:
 1. Classifies `text` against the templates in `agent/templates/*.json`.
 2. Extracts fields per the matched template's schema using Gemma (via whatever provider is fastest to key up — Google AI Studio or Groq both serve Gemma models; pick whichever has a working API key first).
 3. Looks for an existing open workspace this item belongs to (e.g. same hackathon name/deadline mentioned again) — if none, creates one.
-4. Persists both the item and the workspace to SQLite (`agent/data/driftnet.db`, via `better-sqlite3` — no external DB needed).
+4. Persists both the item and the workspace to Postgres, scoped to the signed-in user (`DATABASE_URL`; PGlite locally when unset).
 
 ### `GET /api/workspaces`
 Response: `{ "workspaces": Workspace[] }` (each with its nested items).
@@ -89,9 +89,9 @@ Keep styling clean and minimal — this is a demo for a write-up, not a producti
 
 ## What NOT to build (scope guard for the deadline)
 
-- No auth/accounts — single-user local demo is enough.
+- No teams or sharing between accounts.
 - No mobile app / browser extension — web only.
-- No cross-device sync — local SQLite file is fine.
+- No social login, password reset or email verification: email and password with a bearer token is enough for the demo.
 - No more than the templates listed above unless everything else is done early.
 
 ## Demo script (for the write-up and any recording)
@@ -101,3 +101,10 @@ Keep styling clean and minimal — this is a demo for a write-up, not a producti
 3. Driftnet classifies it as a hackathon opportunity, extracts the deadline (Oct 5, 6:59 AM UTC), prize categories, and theme, and creates a "Hacktoberfest Weekend Challenge" workspace with a starter task list — instead of a blank note.
 4. Capture a second, unrelated loose idea by voice ("I just thought of a feature for X") and show it landing in the Inbox, correctly classified as an idea, not a hackathon.
 5. Show asking "what's due soonest" style retrieval if time allows (optional stretch).
+
+## Accounts
+
+- `POST /api/auth/signup` and `POST /api/auth/login` take `{ email, password }` (password at least 8 characters) and return `{ token, user }`. The token is a 30-day signed JWT sent as `Authorization: Bearer <token>`.
+- `GET /api/auth/me` returns the signed-in user.
+- `/api/capture`, `/api/workspaces`, `/api/items` and `/api/transcribe` require a token. Every query is filtered by the token's user id, so accounts never see each other's data. `GET /api/health` stays public.
+- Auth routes are rate limited per IP. The frontend keeps the token in localStorage so a session survives refreshes and works on phones.

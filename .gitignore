@@ -10,3 +10,5 @@ dist/
 agent/data/*.db
 .DS_Store
 agent/TASK.md
+agent/data/
+*.tsbuildinfo
