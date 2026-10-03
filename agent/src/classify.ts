@@ -58,14 +58,47 @@ ${text}
 
 function extractJson(raw: string): unknown {
   const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("model returned no JSON");
-  return JSON.parse(raw.slice(start, end + 1));
+  if (start === -1) throw new Error("model returned no JSON");
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < raw.length; i++) {
+    const c = raw[i];
+    if (inString) {
+      if (c === "\\") i++;
+      else if (c === '"') inString = false;
+    } else if (c === '"') inString = true;
+    else if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) return JSON.parse(raw.slice(start, i + 1));
+  }
+  throw new Error("model returned unbalanced JSON");
+}
+
+function normalize(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const obj = { ...(raw as Record<string, unknown>) };
+  if (obj.fields === undefined || obj.fields === null) {
+    const { template, title, workspaceMatch, ...rest } = obj;
+    return { template, title: title ?? rest.name ?? rest.summary ?? "Untitled", workspaceMatch, fields: rest };
+  }
+  return obj;
+}
+
+async function generateOnce(prompt: string): Promise<Classification> {
+  const res = await getAgent().generate(prompt, {
+    providerOptions: { google: { thinkingConfig: { thinkingLevel: "minimal" } } },
+  });
+  return Result.parse(normalize(extractJson(res.text)));
 }
 
 export async function classify(text: string, workspaces: WorkspaceRow[]): Promise<Classification> {
-  const res = await getAgent().generate(buildPrompt(text, workspaces));
-  const parsed = Result.parse(extractJson(res.text));
+  const prompt = buildPrompt(text, workspaces);
+  let parsed: Classification;
+  try {
+    parsed = await generateOnce(prompt);
+  } catch {
+    await new Promise((r) => setTimeout(r, 800));
+    parsed = await generateOnce(prompt);
+  }
   if (!templateTypes.includes(parsed.template)) parsed.template = "note";
   return parsed;
 }

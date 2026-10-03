@@ -1,0 +1,10 @@
+{
+  "type": "task",
+  "description": "A standalone to-do or reminder, something someone has to do or reply to.",
+  "fields": {
+    "summary": "string — the action in one short line",
+    "due": "string — ISO date/time if mentioned, otherwise empty",
+    "relatedTo": "string — an existing workspace/project this belongs to, else empty",
+    "person": "string — who it involves, if anyone"
+  }
+}

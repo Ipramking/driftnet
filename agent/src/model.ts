@@ -3,7 +3,7 @@ import { createGroq } from "@ai-sdk/groq";
 
 export function modelInfo(): { provider: string; id: string } {
   const provider = (process.env.GEMMA_PROVIDER ?? "google").toLowerCase();
-  const fallback = provider === "groq" ? "gemma2-9b-it" : "gemma-3-27b-it";
+  const fallback = provider === "groq" ? "gemma2-9b-it" : "gemma-4-26b-a4b-it";
   return { provider, id: process.env.GEMMA_MODEL ?? fallback };
 }
 
