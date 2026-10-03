@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: driftnet-agent
+    runtime: node
+    rootDir: agent
+    buildCommand: npm install
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: GEMMA_PROVIDER
+        value: google
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+
+  - type: web
+    name: driftnet
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NEXT_PUBLIC_AGENT_URL
+        value: https://driftnet-agent.onrender.com
