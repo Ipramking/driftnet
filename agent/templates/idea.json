@@ -1,0 +1,10 @@
+{
+  "type": "idea",
+  "description": "A standalone thought, feature, or concept with no deadline attached.",
+  "fields": {
+    "summary": "string — the idea in one line",
+    "category": "string — e.g. project, business, feature, research",
+    "relatedTo": "string — an existing workspace/project this might belong to, else empty",
+    "nextAction": "string — the smallest next step"
+  }
+}

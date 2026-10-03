@@ -1,0 +1,10 @@
+{
+  "type": "resource",
+  "description": "A saved link, article, or reference to come back to later.",
+  "fields": {
+    "title": "string — short label for the resource",
+    "url": "string — the link, if one was given",
+    "relatedTo": "string — an existing workspace/project this might belong to, else empty",
+    "whyItMatters": "string — one line on why it was saved"
+  }
+}

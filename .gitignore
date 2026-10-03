@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+.env
+.env.local
+*.env
+agent/data/*.db
+.DS_Store
+agent/TASK.md

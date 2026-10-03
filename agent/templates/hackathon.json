@@ -1,0 +1,15 @@
+{
+  "type": "hackathon",
+  "description": "An opportunity or event with a deadline and a project to build for it.",
+  "fields": {
+    "name": "string — the hackathon or challenge name",
+    "deadline": "string — ISO date/time if determinable, otherwise the raw phrase mentioned",
+    "source": "string — where this was seen (link, platform, or person who mentioned it)",
+    "projectIdea": "string — any project/idea already associated with it, else empty",
+    "techStack": "array of strings — any technologies mentioned or implied",
+    "resources": "array of strings — links or references mentioned",
+    "tasks": "array of strings — a short starter task list (e.g. pick idea, scope build, write submission)",
+    "status": "string — one of: potential, in-progress, submitted",
+    "notes": "string — anything else worth keeping"
+  }
+}
